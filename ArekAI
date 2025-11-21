@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizQuest: Petualangan Geografi</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #0f1b2a, #0a1222);
+            color: #e2e8f0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(100, 181, 246, 0.6);
+            border-radius: 50%;
+            animation: float 15s infinite linear;
+        }
+        @keyframes float {
+            0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 0.7; }
+            100% { transform: translateY(-100vh) translateX(100px) rotate(360deg); opacity: 0; }
+        }
+        .floating-island {
+            position: absolute;
+            font-size: 2rem;
+            opacity: 0.7;
+            animation: drift 45s infinite ease-in-out;
+        }
+        @keyframes drift {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(100px, -50px); }
+            50% { transform: translate(-80px, -100px); }
+            75% { transform: translate(50px, -30px); }
+        }
+        .screen {
+            display: none;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            animation: fadeIn 0.8s ease forwards;
+            opacity: 0;
+        }
+        .screen.active {
+            display: block;
+            opacity: 1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-20px); }
+        }
+        .logo {
+            font-size: 3.8rem;
+            margin: 25px 0;
+            color: #64b5f6;
+            text-shadow: 0 0 20px rgba(100, 181, 246, 0.7);
+            position: relative;
+        }
+        .logo::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #4ade80, transparent);
+            border-radius: 2px;
+        }
+        .character-walk {
+            font-size: 5rem;
+            margin: 20px auto;
+            animation: walk 4s infinite steps(4);
+        }
+        @keyframes walk {
+            0% { transform: translateX(0) rotate(0deg); }
+            25% { transform: translateX(10px) rotate(5deg); }
+            50% { transform: translateX(0) rotate(0deg); }
+            75% { transform: translateX(-10px) rotate(-5deg); }
+            100% { transform: translateX(0) rotate(0deg); }
+        }
+        .subtitle {
+            font-size: 1.4rem;
+            margin-bottom: 30px;
+            color: #94a3b8;
+            max-width: 650px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+        .btn {
+            background: linear-gradient(135deg, #4361ee, #3a0ca3);
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 15px 10px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(67, 97, 238, 0.6);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 25, 44, 0.7);
+            padding: 15px 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(100, 181, 246, 0.2);
+        }
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .stat-value {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #64b5f6;
+        }
+        .stat-label {
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+        .map {
+            background: linear-gradient(145deg, #0f1a2c, #14253d);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 10px 30px rgba(0,0,0,0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        .map::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, #ffd700, #64b5f6, #4ade80, #ff6b6b, #feca57);
+        }
+        .continent {
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-left: 4px solid #4361ee;
+            position: relative;
+            overflow: hidden;
+        }
+        .continent::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(67, 97, 238, 0.1), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.8s;
+        }
+        .continent:hover::before {
+            transform: translateX(100%);
+        }
+        .continent:hover {
+            background: rgba(67, 97, 238, 0.2);
+            transform: translateX(10px) scale(1.02);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            z-index: 2;
+        }
+        .continent.unlocked {
+            border-left-color: #4ade80;
+        }
+        .continent.unlocked h3 {
+            color: #4ade80;
+        }
+        .continent.locked {
+            opacity: 0.6;
+            cursor: not-allowed;
+            filter: grayscale(0.5);
+        }
+        .continent h3 {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+            color: #e2e8f0;
+            transition: color 0.3s;
+        }
+        .continent i {
+            font-size: 1.4rem;
+        }
+        .question-card {
+            background: rgba(15, 25, 44, 0.85);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 25px 0;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            backdrop-filter: blur(3px);
+            border: 1px solid rgba(100, 181, 246, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        .question-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb, #1dd1a1);
+        }
+        .question-number {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .question-text {
+            font-size: 1.4rem;
+            margin-bottom: 25px;
+            line-height: 1.5;
+            color: #e2e8f0;
+            position: relative;
+        }
+        .question-text::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: #4361ee;
+            border-radius: 3px;
+        }
+        .options {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .option {
+            background: linear-gradient(135deg, #1e293b, #2d3748);
+            border: 2px solid #334155;
+            border-radius: 12px;
+            padding: 16px 20px;
+            text-align: left;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.25s;
+            position: relative;
+            overflow: hidden;
+        }
+        .option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: width 0.3s;
+            z-index: 1;
+        }
+        .option:hover::before {
+            width: 100%;
+        }
+        .option:hover {
+            border-color: #4361ee;
+            transform: translateX(5px);
+        }
+        .option.selected {
+            background: #2d3748;
+            border-color: #4361ee;
+        }
+        .option.correct {
+            background: rgba(46, 204, 113, 0.2);
+            border-color: #2ecc71;
+        }
+        .option.incorrect {
+            background: rgba(231, 76, 60, 0.2);
+            border-color: #e74c3c;
+        }
+        .result {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            display: none;
+            animation: pulse 0.6s;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+        .result.correct {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+            display: block;
+            border: 1px solid rgba(46, 204, 113, 0.4);
+        }
+        .result.incorrect {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            display: block;
+            border: 1px solid rgba(231, 76, 60, 0.4);
+        }
+        .golden-key {
+            font-size: 2.5rem;
+            display: inline-block;
+            animation: spin 4s infinite linear, floatKey 3s infinite ease-in-out;
+            margin: 0 5px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes floatKey {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(180deg); }
+        }
+        .team-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(10, 16, 28, 0.9);
+            padding: 14px 20px;
+            text-align: center;
+            font-size: 1.05rem;
+            color: #e0e7ff;
+            border-top: 1px solid rgba(100, 181, 246, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            box-shadow: 0 -2px 15px rgba(0,0,0,0.3);
+            animation: slideUp 1s ease-out;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .team-name {
+            font-weight: bold;
+            color: #64b5f6;
+            font-size: 1.2rem;
+        }
+        .school-name {
+            color: #4ade80;
+            font-weight: 700;
+        }
+        @media (max-width: 600px) {
+            .logo { font-size: 2.6rem; }
+            .character-walk { font-size: 3.5rem; }
+            .subtitle { font-size: 1.1rem; }
+            .btn { padding: 14px 25px; font-size: 1rem; }
+            .game-header { flex-wrap: wrap; gap: 10px; }
+            .stat { margin-bottom: 10px; }
+            .team-banner { font-size: 0.9rem; padding: 12px 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    <div class="floating-island" style="top: 15%; left: 10%;">⛰️</div>
+    <div class="floating-island" style="top: 70%; left: 85%; animation-delay: -15s;">🏰</div>
+    <div class="floating-island" style="top: 40%; left: 5%; animation-delay: -30s;">🌵</div>
+    <div class="floating-island" style="top: 25%; left: 90%; animation-delay: -20s;">🏔️</div>
+    <div class="screen active" id="introScreen">
+        <div class="character-walk">🎒</div>
+        <div class="logo"><i class="fas fa-globe-asia"></i> QuizQuest</div>
+        <p class="subtitle">Petualangan Geografi: Jelajahi Dunia, Kuasai Peta!</p>
+        <p style="max-width: 600px; margin: 0 auto 30px; line-height: 1.6; color: #cbd5e1;">
+            Jawab 10 soal Geografi per benua untuk membuka <span class="golden-key">🔑</span> kunci emas!
+        </p>
+        <button class="btn" id="startBtn"><i class="fas fa-play"></i> Mulai Petualangan</button>
+        <p style="margin-top: 25px; font-size: 0.9rem; color: #94a3b8;">
+            🌍 Fokus pada Benua yang Dipilih!
+        </p>
+    </div>
+    <div class="screen" id="mapScreen">
+        <div class="game-header">
+            <div class="stat">
+                <div class="stat-value" id="score">0</div>
+                <div class="stat-label">POIN</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="keys">0/5</div>
+                <div class="stat-label">KUNCI EMAS</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="level">Asia</div>
+                <div class="stat-label">BENUA</div>
+            </div>
+        </div>
+        <div class="map">
+            <h2 style="color: #64b5f6; margin-bottom: 20px; text-shadow: 0 0 10px rgba(100, 181, 246, 0.5);">
+                <i class="fas fa-map-marked-alt"></i> Peta Petualangan
+            </h2>
+            <div class="continent unlocked" data-continent="asia">
+                <h3><i class="fas fa-mountain"></i> Asia</h3>
+                <p>10 Soal Geografi tentang Asia</p>
+            </div>
+            <div class="continent locked" data-continent="eropa">
+                <h3><i class="fas fa-monument"></i> Eropa</h3>
+                <p>Kunci: Asia harus selesai dulu</p>
+            </div>
+            <div class="continent locked" data-continent="afrika">
+                <h3><i class="fas fa-campground"></i> Afrika</h3>
+                <p>Kunci: Eropa harus selesai dulu</p>
+            </div>
+            <div class="continent locked" data-continent="amerika">
+                <h3><i class="fas fa-landmark"></i> Amerika</h3>
+                <p>Kunci: Afrika harus selesai dulu</p>
+            </div>
+            <div class="continent locked" data-continent="antartika">
+                <h3><i class="fas fa-snowflake"></i> Antartika</h3>
+                <p>Kunci: Semua benua harus selesai!</p>
+            </div>
+        </div>
+        <button class="btn" id="backToIntro"><i class="fas fa-arrow-left"></i> Kembali</button>
+    </div>
+    <div class="screen" id="quizScreen">
+        <div class="game-header">
+            <div class="stat">
+                <div class="stat-value" id="qScore">0</div>
+                <div class="stat-label">POIN</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="qNumber">1/10</div>
+                <div class="stat-label">SOAL</div>
+            </div>
+        </div>
+        <div class="question-card">
+            <div class="question-number">
+                <i class="fas fa-globe-asia"></i> Benua Asia • Soal 1
+            </div>
+            <div class="question-text" id="questionText">
+                Negara terbesar di dunia berdasarkan luas wilayah sebagian besar berada di Benua Asia. Negara tersebut adalah...
+            </div>
+            <div class="options" id="optionsContainer">
+                <div class="option" data-value="A">A. Rusia</div>
+                <div class="option" data-value="B">B. China</div>
+                <div class="option" data-value="C">C. Kazakhstan</div>
+                <div class="option" data-value="D">D. India</div>
+            </div>
+            <div class="result" id="resultBox"></div>
+        </div>
+        <button class="btn" id="nextBtn" style="display: none;"><i class="fas fa-arrow-right"></i> Soal Berikutnya</button>
+        <button class="btn btn-warning" id="skipBtn"><i class="fas fa-redo"></i> Ulangi Benua</button>
+    </div>
+    <div class="screen" id="endScreen">
+        <div class="character-walk" style="animation-name: walk; font-size: 6rem;">🏆</div>
+        <div class="logo"><i class="fas fa-trophy"></i> Selesai!</div>
+        <div style="font-size: 1.8rem; margin: 20px 0; color: #4ade80; text-shadow: 0 0 10px rgba(74, 222, 128, 0.5);" id="finalScore">
+            Skor: 0
+        </div>
+        <div style="font-size: 1.3rem; margin: 15px 0;" id="finalMessage">
+            Kamu ahli geografi dunia!
+        </div>
+        <div style="margin: 25px 0; line-height: 1.6;">
+            <p>✅ 5 <span class="golden-key">🔑</span> Kunci Emas Terkumpul</p>
+            <p>SELAMAT ANDA MENYELESAIKAN PERMAINAN TERSEBUT!</p>
+            <p>🌏 Dunia di ujung jarimu!</p>
+        </div>
+        <button class="btn btn-success" id="restartBtn"><i class="fas fa-redo"></i> Main Lagi</button>
+    </div>
+    <div class="team-banner">
+        <span class="team-name">TIM : SMAKERS</span> • 
+        <span class="school-name">SMAK St. Agustinus</span> •
+        🌍 Lomba Arek Ai 2025
+    </div>
+    <script>
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 60;
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (10 + Math.random() * 20) + 's';
+                particle.style.width = (2 + Math.random() * 4) + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.background = `rgba(100, 181, 246, ${0.3 + Math.random() * 0.5})`;
+                particlesContainer.appendChild(particle);
+            }
+        });
+        // ✅ BANK SOAL GEOGRAFI MURNI — 10 soal per benua, SEMUA TERKAIT BENUA
+        const quizData = {
+            asia: [
+                { q: "Negara terbesar di dunia berdasarkan luas wilayah sebagian besar berada di Benua Asia. Negara tersebut adalah...", a: "A", opts: ["Rusia", "China", "Kazakhstan", "India"], subjek: "Geografi" },
+                { q: "Gunung tertinggi di dunia, yang terletak di perbatasan Nepal dan Tibet, adalah...", a: "B", opts: ["Gunung K2", "Gunung Everest", "Gunung Kinabalu", "Gunung Fuji"], subjek: "Geografi" },
+                { q: "Sungai terpanjang di Asia adalah...", a: "C", opts: ["Sungai Mekong", "Sungai Gangga", "Sungai Yangtze", "Sungai Huang He"], subjek: "Geografi" },
+                { q: "Ibukota negara Jepang adalah...", a: "A", opts: ["Tokyo", "Osaka", "Kyoto", "Hiroshima"], subjek: "Geografi" },
+                { q: "Negara di Asia Tenggara yang tidak memiliki laut (landlocked) adalah...", a: "D", opts: ["Malaysia", "Thailand", "Vietnam", "Laos"], subjek: "Geografi" },
+                { q: "Gurun terbesar di Asia adalah...", a: "B", opts: ["Gurun Thar", "Gurun Gobi", "Gurun Taklamakan", "Gurun Rub' al Khali"], subjek: "Geografi" },
+                { q: "Pulau terbesar di Indonesia sekaligus terbesar ketiga di dunia adalah...", a: "A", opts: ["Kalimantan", "Sumatra", "Papua", "Sulawesi"], subjek: "Geografi" },
+                { q: "Negara dengan jumlah penduduk terbanyak di dunia (hingga 2025) adalah...", a: "C", opts: ["Amerika Serikat", "India", "China", "Indonesia"], subjek: "Geografi" },
+                { q: "Selat yang memisahkan Pulau Sumatra dan Semenanjung Malaya adalah...", a: "D", opts: ["Selat Sunda", "Selat Lombok", "Selat Makassar", "Selat Malaka"], subjek: "Geografi" },
+                { q: "Danau terbesar di Asia adalah...", a: "B", opts: ["Danau Baikal", "Laut Kaspia", "Danau Aral", "Danau Balkhash"], subjek: "Geografi" }
+            ],
+            eropa: [
+                { q: "Ibukota Prancis adalah...", a: "A", opts: ["Paris", "Berlin", "Roma", "Madrid"], subjek: "Geografi" },
+                { q: "Negara terkecil di dunia yang terletak di Eropa adalah...", a: "D", opts: ["Monako", "San Marino", "Liechtenstein", "Vatikan"], subjek: "Geografi" },
+                { q: "Sungai terpanjang di Eropa adalah...", a: "B", opts: ["Sungai Danube", "Sungai Volga", "Sungai Rhine", "Sungai Thames"], subjek: "Geografi" },
+                { q: "Negara Eropa yang terkenal dengan kincir angin dan bunganya adalah...", a: "C", opts: ["Belgia", "Jerman", "Belanda", "Austria"], subjek: "Geografi" },
+                { q: "Pegunungan tertinggi di Eropa adalah...", a: "A", opts: ["Pegunungan Alpen", "Pegunungan Pirinees", "Pegunungan Karpatia", "Pegunungan Ural"], subjek: "Geografi" },
+                { q: "Ibukota Jerman adalah...", a: "B", opts: ["Munich", "Berlin", "Hamburg", "Frankfurt"], subjek: "Geografi" },
+                { q: "Negara yang menjadi penghubung antara Benua Eropa dan Asia adalah...", a: "D", opts: ["Yunani", "Bulgaria", "Rusia", "Turki"], subjek: "Geografi" },
+                { q: "Laut yang memisahkan Eropa dan Afrika adalah...", a: "C", opts: ["Laut Hitam", "Laut Baltik", "Laut Tengah", "Laut Kaspia"], subjek: "Geografi" },
+                { q: "Negara Nordik yang bukan bagian dari Skandinavia adalah...", a: "A", opts: ["Finlandia", "Norwegia", "Swedia", "Denmark"], subjek: "Geografi" },
+                { q: "Ibukota Italia adalah...", a: "B", opts: ["Venice", "Roma", "Milan", "Florence"], subjek: "Geografi" }
+            ],
+            afrika: [
+                { q: "Gurun terluas di dunia yang terletak di Afrika Utara adalah...", a: "D", opts: ["Gurun Kalahari", "Gurun Namib", "Gurun Sinai", "Gurun Sahara"], subjek: "Geografi" },
+                { q: "Sungai terpanjang di dunia yang mengalir di benua Afrika adalah...", a: "A", opts: ["Sungai Nil", "Sungai Kongo", "Sungai Niger", "Sungai Zambezi"], subjek: "Geografi" },
+                { q: "Negara terbesar di Afrika berdasarkan luas wilayah adalah...", a: "C", opts: ["Nigeria", "Afrika Selatan", "Algeria", "Sudan"], subjek: "Geografi" },
+                { q: "Danau terbesar di Afrika adalah...", a: "B", opts: ["Danau Victoria", "Danau Tanganyika", "Danau Malawi", "Danau Chad"], subjek: "Geografi" },
+                { q: "Gunung tertinggi di Afrika adalah...", a: "A", opts: ["Gunung Kilimanjaro", "Gunung Kenya", "Gunung Ruwenzori", "Gunung Atlas"], subjek: "Geografi" },
+                { q: "Ibukota Mesir adalah...", a: "D", opts: ["Alexandria", "Giza", "Luxor", "Kairo"], subjek: "Geografi" },
+                { q: "Negara Afrika yang dilewati garis Khatulistiwa dan memiliki hutan hujan tropis terluas kedua di dunia adalah...", a: "B", opts: ["Uganda", "Republik Demokratik Kongo", "Gabon", "Kamerun"], subjek: "Geografi" },
+                { q: "Tanjung paling selatan di Afrika adalah...", a: "C", opts: ["Tanjung Harapan", "Tanjung Good Hope", "Tanjung Agulhas", "Tanjung Froward"], subjek: "Geografi" },
+                { q: "Negara di Afrika yang dikenal sebagai 'Negeri Zamrud' karena keindahan alamnya adalah...", a: "A", opts: ["Zimbabwe", "Zambia", "Mozambik", "Malawi"], subjek: "Geografi" },
+                { q: "Pulau Madagaskar terletak di lepas pantai bagian...", a: "D", opts: ["Utara", "Barat", "Timur", "Tenggara"], subjek: "Geografi" }
+            ],
+            amerika: [
+                { q: "Negara terbesar di Benua Amerika berdasarkan luas wilayah adalah...", a: "B", opts: ["Brasil", "Amerika Serikat", "Kanada", "Argentina"], subjek: "Geografi" },
+                { q: "Gunung tertinggi di Amerika Utara adalah...", a: "C", opts: ["Gunung Logan", "Gunung Saint Elias", "Gunung Denali", "Gunung Foraker"], subjek: "Geografi" },
+                { q: "Sungai terpanjang di Amerika Selatan adalah...", a: "A", opts: ["Sungai Amazon", "Sungai Orinoco", "Sungai Paraná", "Sungai Magdalena"], subjek: "Geografi" },
+                { q: "Ibukota Brazil adalah...", a: "D", opts: ["Rio de Janeiro", "São Paulo", "Salvador", "Brasília"], subjek: "Geografi" },
+                { q: "Negara Amerika Tengah yang tidak memiliki pantai adalah...", a: "B", opts: ["Belize", "El Salvador", "Honduras", "Nicaragua"], subjek: "Geografi" },
+                { q: "Danau terbesar di Amerika Utara adalah...", a: "A", opts: ["Danau Superior", "Danau Michigan", "Danau Huron", "Danau Erie"], subjek: "Geografi" },
+                { q: "Pegunungan Andes terletak di sepanjang pantai barat benua...", a: "C", opts: ["Amerika Utara", "Amerika Tengah", "Amerika Selatan", "Keduanya"], subjek: "Geografi" },
+                { q: "Negara terkecil di Amerika Tengah adalah...", a: "D", opts: ["Panama", "Kosta Rika", "Honduras", "El Salvador"], subjek: "Geografi" },
+                { q: "Terusan Panama menghubungkan Samudra Pasifik dengan...", a: "B", opts: ["Samudra Hindia", "Samudra Atlantik", "Laut Karibia", "Teluk Meksiko"], subjek: "Geografi" },
+                { q: "Ibukota Kanada adalah...", a: "A", opts: ["Ottawa", "Toronto", "Montreal", "Vancouver"], subjek: "Geografi" }
+            ],
+            antartika: [
+                { q: "Benua Antartika dikelilingi oleh...", a: "D", opts: ["Samudra Pasifik", "Samudra Atlantik", "Samudra Hindia", "Samudra Selatan"], subjek: "Geografi" },
+                { q: "Benua Antartika merupakan benua ter...", a: "A", opts: ["Kering", "Basah", "Panas", "Rendah"], subjek: "Geografi" },
+                { q: "Negara yang **tidak** mengklaim wilayah di Antartika adalah...", a: "C", opts: ["Australia", "Norwegia", "Indonesia", "Prancis"], subjek: "Geografi" },
+                { q: "Titik paling selatan di Bumi terletak di...", a: "B", opts: ["Kutub Utara", "Kutub Selatan", "Antartika Timur", "Antartika Barat"], subjek: "Geografi" },
+                { q: "Gunung tertinggi di Antartika adalah...", a: "D", opts: ["Gunung Erebus", "Gunung Terror", "Gunung Sidley", "Gunung Vinson"], subjek: "Geografi" },
+                { q: "Antartika menyimpan sekitar ...% cadangan air tawar dunia.", a: "C", opts: ["50%", "60%", "70%", "80%"], subjek: "Geografi" },
+                { q: "Pulau terbesar di dekat Antartika adalah...", a: "A", opts: ["Pulau Alexander", "Pulau Ross", "Pulau King George", "Pulau Deception"], subjek: "Geografi" },
+                { q: "Antartika memiliki iklim...", a: "B", opts: ["Tropis", "Kutub", "Sedang", "Gurun panas"], subjek: "Geografi" },
+                { q: "Musim panas di Antartika terjadi pada bulan...", a: "D", opts: ["Desember – Februari", "Maret – Mei", "Juni – Agustus", "September – November"], subjek: "Geografi" },
+                { q: "Antartika adalah benua yang...", a: "A", opts: ["Tidak memiliki penduduk tetap", "Memiliki kota besar", "Dihuni oleh suku asli", "Memiliki iklim tropis"], subjek: "Geografi" }
+            ]
+        };
+        const state = {
+            currentScreen: 'intro',
+            currentContinent: 'asia',
+            currentQuestionIndex: 0,
+            score: 0,
+            keys: 0,
+            shuffledQuestions: {
+                asia: [],
+                eropa: [],
+                afrika: [],
+                amerika: [],
+                antartika: []
+            }
+        };
+        function initializeShuffledQuestions() {
+            Object.keys(quizData).forEach(continent => {
+                state.shuffledQuestions[continent] = shuffleArray(quizData[continent]);
+            });
+        }
+        const screens = {
+            intro: document.getElementById('introScreen'),
+            map: document.getElementById('mapScreen'),
+            quiz: document.getElementById('quizScreen'),
+            end: document.getElementById('endScreen')
+        };
+        const buttons = {
+            start: document.getElementById('startBtn'),
+            back: document.getElementById('backToIntro'),
+            next: document.getElementById('nextBtn'),
+            skip: document.getElementById('skipBtn'),
+            restart: document.getElementById('restartBtn')
+        };
+        const elements = {
+            score: document.getElementById('score'),
+            keys: document.getElementById('keys'),
+            level: document.getElementById('level'),
+            qScore: document.getElementById('qScore'),
+            qNumber: document.getElementById('qNumber'),
+            questionText: document.getElementById('questionText'),
+            optionsContainer: document.getElementById('optionsContainer'),
+            resultBox: document.getElementById('resultBox'),
+            finalScore: document.getElementById('finalScore'),
+            finalMessage: document.getElementById('finalMessage')
+        };
+        function showScreen(screenId) {
+            const currentScreenElement = screens[state.currentScreen];
+            screens[screenId].classList.remove('active');
+            if (currentScreenElement) {
+                currentScreenElement.style.animation = 'fadeOut 0.4s forwards';
+                setTimeout(() => {
+                    currentScreenElement.classList.remove('active');
+                    currentScreenElement.style.animation = '';
+                    screens[screenId].classList.add('active');
+                    state.currentScreen = screenId;
+                    if (screenId === 'quiz') {
+                        loadQuestion();
+                    }
+                }, 400);
+            } else {
+                screens[screenId].classList.add('active');
+                state.currentScreen = screenId;
+                if (screenId === 'quiz') {
+                    loadQuestion();
+                }
+            }
+        }
+        function updateUI() {
+            elements.score.textContent = state.score;
+            elements.keys.textContent = `${state.keys}/5`;
+            elements.level.textContent = 
+                ({asia:'Asia', eropa:'Eropa', afrika:'Afrika', amerika:'Amerika', antartika:'Antartika'})[state.currentContinent];
+            elements.qScore.textContent = state.score;
+            const total = state.shuffledQuestions[state.currentContinent].length;
+            elements.qNumber.textContent = `${state.currentQuestionIndex + 1}/${total}`;
+        }
+        function loadQuestion() {
+            const questions = state.shuffledQuestions[state.currentContinent];
+            if (state.currentQuestionIndex >= questions.length) return;
+            const q = questions[state.currentQuestionIndex];
+
+            // Bersihkan semua opsi lama dan event handler
+            const existingOptions = elements.optionsContainer.querySelectorAll('.option');
+            existingOptions.forEach(opt => {
+                opt.onclick = null;
+                opt.classList.remove('selected', 'correct', 'incorrect');
+            });
+            elements.optionsContainer.innerHTML = ''; // Hapus semua elemen opsi lama
+
+            // Update teks benua di soal
+            const continentName = {
+                asia: 'Asia', eropa: 'Eropa', afrika: 'Afrika', 
+                amerika: 'Amerika', antartika: 'Antartika'
+            };
+            const icon = {
+                asia: 'fa-mountain', eropa: 'fa-monument', 
+                afrika: 'fa-campground', amerika: 'fa-landmark', 
+                antartika: 'fa-snowflake'
+            };
+            document.querySelector('.question-number').innerHTML = 
+                `<i class="fas ${icon[state.currentContinent]}"></i> Benua ${continentName[state.currentContinent]} • Soal ${state.currentQuestionIndex + 1}`;
+            elements.questionText.textContent = q.q;
+
+            // Buat opsi baru
+            q.opts.forEach((opt, i) => {
+                const letter = ['A','B','C','D'][i];
+                const div = document.createElement('div');
+                div.className = 'option';
+                div.dataset.value = letter;
+                div.innerHTML = `<strong>${letter}.</strong> ${opt}`;
+                div.onclick = () => selectOption(div, letter, q.a);
+                elements.optionsContainer.appendChild(div);
+            });
+
+            // Reset hasil dan tombol next
+            elements.resultBox.className = 'result';
+            elements.resultBox.style.display = 'none';
+            buttons.next.style.display = 'none';
+        }
+        function playSound(type) {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                if (type === 'success') {
+                    osc.frequency.setValueAtTime(880, ctx.currentTime);
+                    osc.type = 'sine';
+                    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+                    osc.start(ctx.currentTime);
+                    osc.stop(ctx.currentTime + 0.3);
+                } else if (type === 'error') {
+                    osc.frequency.setValueAtTime(220, ctx.currentTime);
+                    osc.type = 'square';
+                    gain.gain.setValueAtTime(0.05, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+                    osc.start(ctx.currentTime);
+                    osc.stop(ctx.currentTime + 0.2);
+                }
+            } catch (e) {}
+        }
+        function selectOption(element, selected, correct) {
+            document.querySelectorAll('.option').forEach(opt => {
+                opt.onclick = null;
+                opt.classList.remove('selected');
+            });
+            element.classList.add('selected');
+            if (selected === correct) {
+                element.classList.add('correct');
+                state.score += 10;
+                elements.resultBox.textContent = '✅ Benar! +10 poin';
+                elements.resultBox.className = 'result correct';
+                playSound('success');
+            } else {
+                element.classList.add('incorrect');
+                document.querySelector(`.option[data-value="${correct}"]`).classList.add('correct');
+                elements.resultBox.textContent = `❌ Salah. Jawaban benar: ${correct}`;
+                elements.resultBox.className = 'result incorrect';
+                playSound('error');
+            }
+            elements.resultBox.style.display = 'block';
+            buttons.next.style.display = 'inline-flex';
+        }
+        function nextQuestion() {
+            state.currentQuestionIndex++;
+            const questions = state.shuffledQuestions[state.currentContinent];
+            if (state.currentQuestionIndex < questions.length) {
+                loadQuestion();
+                updateUI();
+            } else {
+                state.keys++;
+                if (state.keys === 5) {
+                    elements.finalScore.textContent = `Skor Akhir: ${state.score}`;
+                    let msg = "Hebat! Kamu menguasai 50 soal dari 5 benua!";
+                    if (state.score >= 450) msg = "JENIUS! Skor sempurna — calon ilmuwan dunia!";
+                    else if (state.score >= 350) msg = "LUAR BIASA! Penguasaan ilmu sangat mendalam!";
+                    elements.finalMessage.textContent = msg;
+                    playSound('success');
+                    showScreen('end');
+                } else {
+                    const continents = ['asia','eropa','afrika','amerika','antartika'];
+                    const nextContinent = continents[state.keys];
+                    state.currentContinent = nextContinent;
+                    state.currentQuestionIndex = 0;
+                    document.querySelector(`.continent[data-continent="${nextContinent}"]`).classList.replace('locked', 'unlocked');
+                    updateUI();
+                    showScreen('map');
+                }
+            }
+        }
+        buttons.start.onclick = () => {
+            initializeShuffledQuestions();
+            state.score = 0;
+            state.keys = 0;
+            state.currentContinent = 'asia';
+            state.currentQuestionIndex = 0;
+            updateUI();
+            showScreen('map');
+        };
+        buttons.back.onclick = () => showScreen('intro');
+        buttons.restart.onclick = () => {
+            initializeShuffledQuestions();
+            document.querySelectorAll('.continent').forEach(el => {
+                if (!el.classList.contains('unlocked')) return;
+                el.classList.replace('unlocked', 'locked');
+            });
+            document.querySelector('.continent[data-continent="asia"]').classList.replace('locked', 'unlocked');
+            showScreen('intro');
+        };
+        buttons.next.onclick = nextQuestion;
+        buttons.skip.onclick = () => {
+            state.currentQuestionIndex = 0;
+            updateUI();
+            showScreen('quiz');
+        };
+        document.querySelectorAll('.continent').forEach(el => {
+            el.onclick = () => {
+                const continent = el.dataset.continent;
+                if (el.classList.contains('locked')) return;
+                state.currentContinent = continent;
+                state.currentQuestionIndex = 0;
+                updateUI();
+                showScreen('quiz');
+            };
+        });
+        initializeShuffledQuestions();
+        updateUI();
+    </script>
+</body>
+</html>
